@@ -1,5 +1,9 @@
+import { upload } from ".. /middlewares/multer.middleware.js";
+import { User } from "../models/user.model.js";
 import { Apierror } from "../utils/Apierror.js";
+import { Apiresponse } from "../utils/Apiresponse.js";
 import { asynchandler } from "../utils/asynchandler.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const registerUser=asynchandler(async(req,res)=>{
     //get user detail from frontend
@@ -31,7 +35,38 @@ const registerUser=asynchandler(async(req,res)=>{
 
         
     }
-    req.files?.avatar[0]?.path
+    const avatarLocalpath=req.files?.avatar[0]?.path
+   const coverImageLocalpath= req.files?.coverImage[0]?.path
+
+
+   if(!avatarLocalpath){
+    throw new Apierror(400,"Avatar file is required")
+   }
+
+   const avatar=await uploadOnCloudinary(avatarLocalpath)
+   const coverImage=await uploadOnCloudinary(coverImageLocalpath )
+
+   if(!avatar){
+    throw new Apierror(400,"Avatar file is required")
+   }
+
+   const user=await User.create({
+    fullname,
+    avatar:avatar.url,
+    coverImage:coverImage?.url||"",
+    email,
+    password,
+    username:username.toLowercase()
+   })
+
+  const createdUser= await user.findId(user._id).select(
+    "-password -refreshToken"
+  )
+  if(!createdUser){
+    throw new Apierror(500,"something went wrong while registering a user")
+
+  }
+  return res.status(201).json()
 
 })
 
