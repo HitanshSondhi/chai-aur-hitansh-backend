@@ -15,6 +15,7 @@ import { v2 as cloudinary } from "cloudinary";
                 resource_type:"auto"
             })
             //File has been uploaded successfully
+            //unl
 
             console.log("file is uploaded on cloudinary",response.url);
             fs.unlinkSync(localFilePath)
